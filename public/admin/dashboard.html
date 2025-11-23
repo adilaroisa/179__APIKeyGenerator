@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard Admin</title>
+  <style>
+    /* --- Menggunakan Style Warna Punya Anda (Biru) --- */
+    body {
+      background: #d8ecff; /* Background biru muda */
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .box {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #444;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th {
+      background: #89c4ff; /* Header tabel biru */
+      color: white;
+    }
+
+    /* --- Style Tambahan untuk Tombol & Status --- */
+    .btn-hapus {
+      background: #ff6c6c;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn-hapus:hover {
+      background: #ff4747;
+    }
+
+    .status-on {
+      color: green;
+      font-weight: bold;
+      background: #e6fffa;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .status-off {
+      color: red;
+      font-weight: bold;
+      background: #ffe6e6;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Dashboard Admin</h1>
+
+<div class="box">
+  <h2>Daftar User & Status API</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nama User</th>
+        <th>Email</th>
+        <th>API Key</th>
+        <th>Status</th> <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="user-table-body"></tbody>
+  </table>
+</div>
+
+<script>
+// ------------------ LOAD DATA ------------------
+fetch('/admin/users')
+  .then(res => res.json())
+  .then(result => {
+    const tbody = document.getElementById("user-table-body");
+
+    result.data.forEach(u => {
+      // Menentukan warna dan teks status
+      // Asumsi: Backend mengirim data 'status' atau 'out_of_date'
+      // Jika u.status == 1 (atau true), maka ON. Sesuaikan logika ini dengan database Anda.
+      
+      let statusHtml = '';
+      
+      // LOGIKA STATUS: 
+      // Sesuaikan kondisi di bawah ini dengan respon JSON backend Anda
+      if (u.status === 1 || u.active === true || u.out_of_date === 0) {
+         statusHtml = '<span class="status-on">ON (Aktif)</span>';
+      } else {
+         statusHtml = '<span class="status-off">OFF (Mati)</span>';
+      }
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${u.id}</td>
+          <td>${u.first_name} ${u.last_name}</td>
+          <td>${u.email}</td>
+          <td>${u.key ?? '-'}</td> <td>${statusHtml}</td>   <td>
+            <button class="btn-hapus" onclick="hapusUser(${u.id})">Hapus</button>
+          </td>
+        </tr>
+      `;
+    });
+  });
+
+// ------------------ FUNGSI HAPUS ------------------
+function hapusUser(id) {
+  if (!confirm("Yakin mau hapus user ini beserta API Key-nya?")) return;
+
+  fetch(`/admin/delete-user/${id}`, { method: 'DELETE' })
+    .then(res => res.json())
+    .then(result => {
+      alert(result.message);
+      location.reload();
+    })
+    .catch(err => alert("Gagal menghapus user"));
+}
+</script>
+
+</body>
+</html>
